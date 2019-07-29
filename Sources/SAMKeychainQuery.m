@@ -34,12 +34,15 @@
 		}
 		return NO;
 	}
+
+	NSData *passwordData = self.passwordData;
+
 	NSMutableDictionary *query = nil;
 	NSMutableDictionary * searchQuery = [self query];
 	status = SecItemCopyMatching((__bridge CFDictionaryRef)searchQuery, nil);
 	if (status == errSecSuccess) {//item already exists, update it!
 		query = [[NSMutableDictionary alloc]init];
-		[query setObject:self.passwordData forKey:(__bridge id)kSecValueData];
+		[query setObject:passwordData forKey:(__bridge id)kSecValueData];
 #if __IPHONE_4_0 && TARGET_OS_IPHONE
 		CFTypeRef accessibilityType = [SAMKeychain accessibilityType];
 		if (accessibilityType) {
@@ -50,9 +53,10 @@
 	}else if(status == errSecItemNotFound){//item not found, create it!
 		query = [self query];
 		if (self.label) {
-			[query setObject:self.label forKey:(__bridge id)kSecAttrLabel];
+			NSString *label = self.label;
+			[query setObject:label forKey:(__bridge id)kSecAttrLabel];
 		}
-		[query setObject:self.passwordData forKey:(__bridge id)kSecValueData];
+		[query setObject:passwordData forKey:(__bridge id)kSecValueData];
 #if __IPHONE_4_0 && TARGET_OS_IPHONE
 		CFTypeRef accessibilityType = [SAMKeychain accessibilityType];
 		if (accessibilityType) {
@@ -64,7 +68,8 @@
 	if (status != errSecSuccess && error != NULL) {
 		*error = [[self class] errorWithCode:status];
 	}
-	return (status == errSecSuccess);}
+	return (status == errSecSuccess);
+}
 
 
 - (BOOL)deleteItem:(NSError *__autoreleasing *)error {
@@ -164,7 +169,8 @@
 
 - (NSString *)password {
 	if ([self.passwordData length]) {
-		return [[NSString alloc] initWithData:self.passwordData encoding:NSUTF8StringEncoding];
+		NSData *passwordData = self.passwordData;
+		return [[NSString alloc] initWithData:passwordData encoding:NSUTF8StringEncoding];
 	}
 	return nil;
 }
@@ -192,17 +198,20 @@
 	[dictionary setObject:(__bridge id)kSecClassGenericPassword forKey:(__bridge id)kSecClass];
 
 	if (self.service) {
-		[dictionary setObject:self.service forKey:(__bridge id)kSecAttrService];
+		NSString *service = self.service;
+		[dictionary setObject:service forKey:(__bridge id)kSecAttrService];
 	}
 
 	if (self.account) {
-		[dictionary setObject:self.account forKey:(__bridge id)kSecAttrAccount];
+		NSString *account = self.account;
+		[dictionary setObject:account forKey:(__bridge id)kSecAttrAccount];
 	}
 
 #ifdef SAMKEYCHAIN_ACCESS_GROUP_AVAILABLE
 #if !TARGET_IPHONE_SIMULATOR
 	if (self.accessGroup) {
-		[dictionary setObject:self.accessGroup forKey:(__bridge id)kSecAttrAccessGroup];
+		NSString *accessGroup = self.accessGroup;
+		[dictionary setObject:accessGroup forKey:(__bridge id)kSecAttrAccessGroup];
 	}
 #endif
 #endif
@@ -239,6 +248,12 @@
 	static NSBundle *resourcesBundle = nil;
 	dispatch_once(&onceToken, ^{
 		NSURL *url = [[NSBundle bundleForClass:[SAMKeychainQuery class]] URLForResource:@"SAMKeychain" withExtension:@"bundle"];
+
+		if (url == nil) {
+			NSString *reason = @"Could not find resource SAMKeychain.bundle";
+			@throw [NSException exceptionWithName:NSInternalInconsistencyException reason:reason userInfo:nil];
+		}
+
 		resourcesBundle = [NSBundle bundleWithURL:url];
 	});
 	

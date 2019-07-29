@@ -41,7 +41,7 @@ NSString *const kSAMKeychainWhereKey = @"svce";
 	return [self passwordDataForService:serviceName account:account error:nil];
 }
 
-+ (nullable NSData *)passwordDataForService:(NSString *)serviceName account:(NSString *)account error:(NSError **)error {
++ (nullable NSData *)passwordDataForService:(NSString *)serviceName account:(NSString *)account error:(NSError *__autoreleasing *)error {
     SAMKeychainQuery *query = [[SAMKeychainQuery alloc] init];
     query.service = serviceName;
     query.account = account;
@@ -82,7 +82,7 @@ NSString *const kSAMKeychainWhereKey = @"svce";
 }
 
 
-+ (BOOL)setPasswordData:(NSData *)password forService:(NSString *)serviceName account:(NSString *)account error:(NSError **)error {
++ (BOOL)setPasswordData:(NSData *)password forService:(NSString *)serviceName account:(NSString *)account error:(NSError *__autoreleasing *)error {
     SAMKeychainQuery *query = [[SAMKeychainQuery alloc] init];
     query.service = serviceName;
     query.account = account;
